@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سامانه جامع کاداستر و گواهی ثبتی</title>
+    <!-- SDK اصلی تلگرام -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg-color: var(--tg-theme-bg-color, #f4f6f8);
+            --text-color: var(--tg-theme-text-color, #222222);
+            --card-bg: var(--tg-theme-secondary-bg-color, #ffffff);
+            --btn-color: var(--tg-theme-button-color, #2481cc);
+            --btn-text: var(--tg-theme-button-text-color, #ffffff);
+            --hint-color: var(--tg-theme-hint-color, #666666);
+            --border-color: #e0e0e0;
+        }
+
+        body {
+            font-family: Tahoma, 'Segoe UI', Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 12px;
+            direction: rtl;
+            font-size: 14px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        h3 {
+            margin-top: 0;
+            margin-bottom: 12px;
+            font-size: 1.05rem;
+            color: var(--btn-color);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 6px;
+        }
+
+        .form-group { margin-bottom: 10px; }
+        label { display: block; margin-bottom: 4px; font-weight: bold; font-size: 0.85rem; }
+
+        input[type="text"], input[type="password"], input[type="number"], textarea {
+            width: 100%;
+            padding: 9px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-sizing: border-box;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
+
+        textarea { resize: vertical; }
+
+        /* تب‌های ورود و ثبت‌نام */
+        .auth-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-color);
+            color: var(--text-color);
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .tab-btn.active {
+            background: var(--btn-color);
+            color: var(--btn-text);
+            border-color: var(--btn-color);
+        }
+
+        /* نوار کاربر وارد شده */
+        .user-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(36, 129, 204, 0.1);
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-weight: bold;
+        }
+        .logout-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+
+        /* جدول پویای مجاورین */
+        .range-header, .range-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1.3fr 2fr 35px;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .range-header {
+            font-weight: bold;
+            font-size: 0.8rem;
+            color: var(--btn-color);
+            margin-bottom: 6px;
+            text-align: center;
+        }
+
+        .range-row { margin-bottom: 8px; }
+
+        .btn-del {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 0;
+            cursor: pointer;
+            font-weight: bold;
+            width: 35px;
+            text-align: center;
+        }
+
+        .btn-add {
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 12px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 0.85rem;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+
+        .submit-btn {
+            background-color: var(--btn-color);
+            color: var(--btn-text);
+            border: none;
+            border-radius: 8px;
+            padding: 14px;
+            width: 100%;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .hint-box {
+            background-color: rgba(36, 129, 204, 0.08);
+            border-right: 3px solid var(--btn-color);
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: var(--text-color);
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+
+        .hint-box ul { margin: 4px 0 0 0; padding-right: 18px; }
+
+        .developer-footer {
+            text-align: center;
+            margin-top: 15px;
+            padding: 10px;
+            font-size: 0.8rem;
+            color: var(--hint-color);
+            border-top: 1px dashed var(--border-color);
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <!-- لیست گزینه‌های پیشنهادی نوع مرز -->
+    <datalist id="border-types-list">
+        <option value="مرز"></option>
+        <option value="دیوار"></option>
+        <option value="کوچه"></option>
+        <option value="خیابان"></option>
+        <option value="بلوار"></option>
+        <option value="مجرای آب"></option>
+        <option value="مسیل"></option>
+        <option value="حریم"></option>
+    </datalist>
+
+    <!-- بخش احراز هویت (ورود / ثبت نام) -->
+    <div id="auth-card" class="card">
+        <h3>🔐 ورود به سامانه کاداستر</h3>
+        <div class="auth-tabs">
+            <button class="tab-btn active" id="tab-login-btn" onclick="switchTab('login')">ورود</button>
+            <button class="tab-btn" id="tab-register-btn" onclick="switchTab('register')">ثبت‌نام جدید</button>
+        </div>
+
+        <!-- فرم ورود -->
+        <div id="form-login">
+            <div class="form-group">
+                <label>نام کاربری:</label>
+                <input type="text" id="login-username" placeholder="نام کاربری خود را وارد کنید">
+            </div>
+            <div class="form-group">
+                <label>رمز عبور:</label>
+                <input type="password" id="login-password" placeholder="رمز عبور">
+            </div>
+            <button class="submit-btn" onclick="handleLogin()">ورود به حساب</button>
+        </div>
+
+        <!-- فرم ثبت‌نام -->
+        <div id="form-register" class="hidden">
+            <div class="form-group">
+                <label>نام و نام خانوادگی:</label>
+                <input type="text" id="reg-fullname" placeholder="مثال: علی حسینی">
+            </div>
+            <div class="form-group">
+                <label>نام کاربری:</label>
+                <input type="text" id="reg-username" placeholder="یک نام کاربری انگلیسی انتخاب کنید">
+            </div>
+            <div class="form-group">
+                <label>رمز عبور:</label>
+                <input type="password" id="reg-password" placeholder="حداقل ۶ کاراکتر">
+            </div>
+            <button class="submit-btn" style="background-color: #2ecc71;" onclick="handleRegister()">ایجاد حساب جدید</button>
+        </div>
+    </div>
+
+    <!-- بخش اصلی سامانه (پس از ورود فعال می‌شود) -->
+    <div id="app-container" class="hidden">
+        
+        <!-- نوار وضعیت کاربر -->
+        <div class="user-bar">
+            <span>👤 کاربر: <span id="current-user-name">---</span></span>
+            <button class="logout-btn" onclick="handleLogout()">خروج</button>
+        </div>
+
+        <!-- بخش مشخصات متقاضی -->
+        <div class="card">
+            <h3>📋 مشخصات متقاضی و پروژه</h3>
+            <div class="form-group">
+                <label>نام و نام خانوادگی مالک / متقاضی:</label>
+                <input type="text" id="applicant_name" placeholder="نام متقاضی (مثال: علی حسینی)">
+            </div>
+            <div class="form-group">
+                <label>کد ملی / شناسه ملی:</label>
+                <input type="text" id="national_id" placeholder="شماره ملی (مثال: 0012345678)">
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <div class="form-group" style="flex: 1;">
+                    <label>مساحت بنا (m²):</label>
+                    <input type="number" id="building_area" placeholder="0.0" step="0.01">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>زون UTM:</label>
+                    <input type="number" id="zone" value="39">
+                </div>
+            </div>
+        </div>
+
+        <!-- بخش ورود مختصات -->
+        <div class="card">
+            <h3>📍 مختصات رئوس (X, Y)</h3>
+            <div class="form-group">
+                <textarea id="coords_text" rows="5" placeholder="مثال:&#10;X=522100.25 Y=4012300.50&#10;یا کپی‌پیست جدول مختصات..."></textarea>
+            </div>
+        </div>
+
+        <!-- بخش تعیین مجاورین -->
+        <div class="card">
+            <h3>🔗 تعیین مجاورین (بازه‌ای)</h3>
+            <div class="hint-box">
+                💡 <b>راهنمای تعیین مجاورین:</b>
+                <ul>
+                    <li>گردش اضلاع به صورت خودکار از شمال و در جهت <b>ساعت‌گرد</b> مرتب می‌شود.</li>
+                    <li>به ازای هر تغییری در نوع مرز یا نام مجاور، یک ردیف جدید اضافه کنید.</li>
+                </ul>
+            </div>
+
+            <div class="range-header">
+                <span>رأس آغاز</span>
+                <span>رأس پایان</span>
+                <span>نوع مرز</span>
+                <span>نام مجاور</span>
+                <span></span>
+            </div>
+
+            <div id="ranges-container"></div>
+            <button type="button" class="btn-add" onclick="addRangeRow()">➕ افزودن بازه مجاور جدید</button>
+        </div>
+
+        <!-- دکمه پردازش -->
+        <button id="submit-btn" class="submit-btn" onclick="sendData()">🚀 پردازش و صدور نقشه‌ها</button>
+    </div>
+
+    <!-- بخش توسعه‌دهنده -->
+    <div class="developer-footer">
+        👨‍💻 طراحی و توسعه داده شده توسط: <b>[نام و نام خانوادگی شما]</b>
+    </div>
+
+    <script>
+        const API_BASE_URL = "https://cadastre-api-5uow.onrender.com";
+        const tg = window.Telegram?.WebApp;
+        const isTelegramEnv = Boolean(tg && tg.initDataUnsafe && tg.initDataUnsafe.user);
+
+        if (tg) { tg.ready(); tg.expand(); }
+
+        function showNotification(msg) {
+            if (isTelegramEnv && tg.showAlert) tg.showAlert(msg);
+            else alert(msg);
+        }
+
+        function downloadBase64File(base64Data, filename) {
+            const link = document.createElement('a');
+            link.href = 'data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,' + base64Data;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // --- مدیریت تب‌ها و توکن ---
+        function switchTab(tab) {
+            document.getElementById('tab-login-btn').classList.toggle('active', tab === 'login');
+            document.getElementById('tab-register-btn').classList.toggle('active', tab === 'register');
+            document.getElementById('form-login').classList.toggle('hidden', tab !== 'login');
+            document.getElementById('form-register').classList.toggle('hidden', tab !== 'register');
+        }
+
+        function checkAuthState() {
+            const token = localStorage.getItem('cadastre_token');
+            const username = localStorage.getItem('cadastre_username');
+
+            if (token) {
+                document.getElementById('auth-card').classList.add('hidden');
+                document.getElementById('app-container').classList.remove('hidden');
+                document.getElementById('current-user-name').innerText = username || "کاربر سامانه";
+            } else {
+                document.getElementById('auth-card').classList.remove('hidden');
+                document.getElementById('app-container').classList.add('hidden');
+            }
+        }
+
+        window.onload = function() {
+            checkAuthState();
+            addRangeRow(1, 5, "مرز", "پلاک فرضی / مجاور");
+        };
+
+        // --- توابع ثبت‌نام و ورود ---
+        async function handleRegister() {
+            const fullName = document.getElementById('reg-fullname').value.trim();
+            const username = document.getElementById('reg-username').value.trim();
+            const password = document.getElementById('reg-password').value.trim();
+
+            if (!username || !password) {
+                showNotification("لطفاً نام کاربری و رمز عبور را وارد کنید.");
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/register`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password, full_name: fullName })
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    showNotification("✅ ثبت‌نام با موفقیت انجام شد. اکنون وارد شوید.");
+                    switchTab('login');
+                } else {
+                    showNotification("❌ خطا: " + (data.detail || "ثبت نام ناموفق بود."));
+                }
+            } catch (err) {
+                showNotification("⚠️ خطا در ارتباط با سرور!");
+            }
+        }
+
+        async function handleLogin() {
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+
+            if (!username || !password) {
+                showNotification("لطفاً نام کاربری و رمز عبور را وارد کنید.");
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/login`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+
+                if (res.ok && data.access_token) {
+                    localStorage.setItem('cadastre_token', data.access_token);
+                    localStorage.setItem('cadastre_username', username);
+                    checkAuthState();
+                    showNotification("✅ با موفقیت وارد شدید.");
+                } else {
+                    showNotification("❌ نام کاربری یا رمز عبور اشتباه است.");
+                }
+            } catch (err) {
+                showNotification("⚠️ خطا در ارتباط با سرور!");
+            }
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('cadastre_token');
+            localStorage.removeItem('cadastre_username');
+            checkAuthState();
+        }
+
+        // --- مدیریت جدول مجاورین ---
+        function addRangeRow(start = 1, end = 2, type = "مرز", name = "") {
+            const container = document.getElementById('ranges-container');
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'range-row';
+            rowDiv.innerHTML = `
+                <input type="number" class="r-start" value="${start}">
+                <input type="number" class="r-end" value="${end}">
+                <input type="text" class="r-type" list="border-types-list" value="${type}">
+                <input type="text" class="r-name" value="${name}">
+                <button type="button" class="btn-del" onclick="this.parentElement.remove()">✕</button>
+            `;
+            container.appendChild(rowDiv);
+        }
+
+        function getRangesData() {
+            const rows = document.querySelectorAll('.range-row');
+            const ranges = [];
+            rows.forEach(row => {
+                ranges.push({
+                    "راس ابتدا": parseInt(row.querySelector('.r-start').value) || 1,
+                    "راس انتها": parseInt(row.querySelector('.r-end').value) || 2,
+                    "نوع مرز": row.querySelector('.r-type').value || "مرز",
+                    "نام مجاور": row.querySelector('.r-name').value || "---"
+                });
+            });
+            return ranges;
+        }
+
+        // --- ارسال اطلاعات و دریافت خروجی ---
+        async function sendData() {
+            const token = localStorage.getItem('cadastre_token');
+            if (!token) {
+                showNotification("لطفاً ابتدا وارد حساب کاربری خود شوید!");
+                handleLogout();
+                return;
+            }
+
+            const coordsText = document.getElementById('coords_text').value.trim();
+            const applicantName = document.getElementById('applicant_name').value.trim();
+            
+            if (!applicantName || !coordsText) {
+                showNotification("لطفاً نام متقاضی و مختصات را وارد کنید!");
+                return;
+            }
+
+            const btn = document.getElementById('submit-btn');
+            btn.disabled = true;
+            btn.innerText = "⏳ در حال انجام محاسبات هندسی...";
+
+            const payload = {
+                is_telegram: isTelegramEnv,
+                user_id: isTelegramEnv ? tg.initDataUnsafe.user.id : null,
+                applicant_name: applicantName,
+                national_id: document.getElementById('national_id').value.trim() || "---",
+                building_area: parseFloat(document.getElementById('building_area').value) || 0.0,
+                zone: parseInt(document.getElementById('zone').value) || 39,
+                coords_text: coordsText,
+                ranges: getRangesData()
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/process`, {
+                    method: "POST",
+                    headers: { 
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.status === 401) {
+                    showNotification("نشست کاری شما به پایان رسیده است. لطفاً مجدداً وارد شوید.");
+                    handleLogout();
+                    return;
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    if (result.files && result.files.length > 0) {
+                        result.files.forEach(file => {
+                            downloadBase64File(file.content_base64, file.filename);
+                        });
+                        showNotification("✅ محاسبات انجام شد و فایل‌های کاداستر دانلود شدند.");
+                    } else {
+                        showNotification("✅ محاسبات انجام شد و فایل‌ها به چت تلگرام ارسال گردیدند.");
+                    }
+                } else {
+                    showNotification("❌ خطا: " + result.error);
+                }
+            } catch (err) {
+                showNotification("⚠️ خطا در ارتباط با سرور!");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "🚀 پردازش و صدور نقشه‌ها";
+            }
+        }
+    </script>
+</body>
+</html>
