@@ -247,11 +247,15 @@
     <!-- بخش اصلی سامانه (پس از ورود فعال می‌شود) -->
     <div id="app-container" class="hidden">
         
-        <!-- نوار وضعیت کاربر -->
-        <div class="user-bar">
-            <span>👤 کاربر: <span id="current-user-name">---</span></span>
-            <button class="logout-btn" onclick="handleLogout()">خروج</button>
-        </div>
+<!-- نوار کاربر -->
+<div class="user-bar">
+    <span>👤 کاربر: <span id="current-user-name">---</span></span>
+    <div>
+        <!-- 👈 این دکمه را اضافه کنید -->
+        <button id="admin-report-btn" class="hidden" onclick="fetchReports()" style="background:#f39c12; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:0.8rem; margin-left:5px; font-weight:bold;">📊 گزارش‌ها</button>
+        <button class="logout-btn" onclick="handleLogout()">خروج</button>
+    </div>
+</div>
 
         <!-- بخش مشخصات متقاضی -->
         <div class="card">
