@@ -247,15 +247,15 @@
     <!-- بخش اصلی سامانه (پس از ورود فعال می‌شود) -->
     <div id="app-container" class="hidden">
         
-<!-- نوار کاربر -->
-<div class="user-bar">
-    <span>👤 کاربر: <span id="current-user-name">---</span></span>
-    <div>
-        <!-- 👈 این دکمه را اضافه کنید -->
-        <button id="admin-report-btn" class="hidden" onclick="fetchReports()" style="background:#f39c12; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:0.8rem; margin-left:5px; font-weight:bold;">📊 گزارش‌ها</button>
-        <button class="logout-btn" onclick="handleLogout()">خروج</button>
-    </div>
-</div>
+        <!-- نوار کاربر -->
+        <div class="user-bar">
+            <span>👤 کاربر: <span id="current-user-name">---</span></span>
+            <div>
+                <!-- دکمه گزارش که فقط برای مدیر نمایش داده می‌شود -->
+                <button id="admin-report-btn" class="hidden" onclick="fetchReports()" style="background:#f39c12; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:0.8rem; margin-left:5px; font-weight:bold;">📊 گزارش‌ها</button>
+                <button class="logout-btn" onclick="handleLogout()">خروج</button>
+            </div>
+        </div>
 
         <!-- بخش مشخصات متقاضی -->
         <div class="card">
@@ -352,11 +352,22 @@
         function checkAuthState() {
             const token = localStorage.getItem('cadastre_token');
             const username = localStorage.getItem('cadastre_username');
+            const isAdmin = localStorage.getItem('cadastre_is_admin') === 'true';
 
             if (token) {
                 document.getElementById('auth-card').classList.add('hidden');
                 document.getElementById('app-container').classList.remove('hidden');
                 document.getElementById('current-user-name').innerText = username || "کاربر سامانه";
+                
+                // مدیریت نمایش دکمه گزارش‌ها فقط برای مدیر
+                const reportBtn = document.getElementById('admin-report-btn');
+                if (reportBtn) {
+                    if (isAdmin) {
+                        reportBtn.classList.remove('hidden');
+                    } else {
+                        reportBtn.classList.add('hidden');
+                    }
+                }
             } else {
                 document.getElementById('auth-card').classList.remove('hidden');
                 document.getElementById('app-container').classList.add('hidden');
@@ -368,7 +379,7 @@
             addRangeRow(1, 5, "مرز", "پلاک فرضی / مجاور");
         };
 
-        // --- توابع ثبت‌نام و ورود ---
+        // --- توابع ثبت‌نام، ورود و خروج ---
         async function handleRegister() {
             const fullName = document.getElementById('reg-fullname').value.trim();
             const username = document.getElementById('reg-username').value.trim();
@@ -418,6 +429,7 @@
                 if (res.ok && data.access_token) {
                     localStorage.setItem('cadastre_token', data.access_token);
                     localStorage.setItem('cadastre_username', username);
+                    localStorage.setItem('cadastre_is_admin', data.is_admin ? 'true' : 'false');
                     checkAuthState();
                     showNotification("✅ با موفقیت وارد شدید.");
                 } else {
@@ -431,7 +443,47 @@
         function handleLogout() {
             localStorage.removeItem('cadastre_token');
             localStorage.removeItem('cadastre_username');
+            localStorage.removeItem('cadastre_is_admin');
             checkAuthState();
+        }
+
+        // --- تابع دریافت گزارش مخصوص مدیر ---
+        async function fetchReports() {
+            const token = localStorage.getItem('cadastre_token');
+            if (!token) {
+                showNotification("لطفاً ابتدا وارد شوید.");
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/admin/reports`, {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    const summary = data.summary;
+                    let msg = `📊 خلاصه گزارش سامانه:\n\n`;
+                    msg += `👥 تعداد کاربران: ${summary.total_users} نفر\n`;
+                    msg += `📜 تعداد نقشه‌های صادرشده: ${summary.total_certificates} فقره\n`;
+                    msg += `📐 مجموع مساحت: ${summary.total_area_sqm.toLocaleString()} متر مربع\n\n`;
+                    
+                    msg += `📋 آخرین نقشه‌های صادرشده:\n`;
+                    if (data.certificates && data.certificates.length > 0) {
+                        data.certificates.slice(0, 5).forEach((c, idx) => {
+                            msg += `${idx + 1}. متقاضی: ${c.applicant_name} | مساحت: ${c.total_area}m² | صادرکننده: ${c.issued_by_username}\n`;
+                        });
+                    } else {
+                        msg += `هنوز هیچ نقشه‌ای صادر نشده است.\n`;
+                    }
+
+                    showNotification(msg);
+                } else {
+                    showNotification("❌ " + (data.detail || "خطا در دریافت گزارش‌ها"));
+                }
+            } catch (err) {
+                showNotification("⚠️ خطا در ارتباط با سرور!");
+            }
         }
 
         // --- مدیریت جدول مجاورین ---
